@@ -10,85 +10,102 @@
             --nest: #4a0d0d; --sewer: #1a3042; --supply: #6b5316; --common: #2a2a2a; --blood: #ff3333;
             --hunter: #4CAF50; --monster: #9c27b0; --hand-bg: #1f1f1f;
         }
-        body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        body { 
+            font-family: 'Courier New', monospace; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 8px; 
+            box-sizing: border-box;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
         
-        #game-screen, #pass-screen { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
+        #game-screen, #pass-screen { display: none; width: 100%; max-width: 450px; flex-direction: column; align-items: center; }
         #pass-screen.active { display: flex; height: 90vh; flex-direction: column; justify-content: center; text-align: center; }
         #game-screen.active { display: flex; }
 
-        #status-panel { width: 100%; max-width: 440px; background: #0a0a0a; padding: 15px; border: 1px solid #333; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); position: relative; }
-        .turn-hunter { color: var(--hunter); font-weight: bold; font-size: 20px; }
-        .turn-monster { color: var(--monster); font-weight: bold; font-size: 20px; }
-        .stats { margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        #status-panel { width: 100%; background: #0a0a0a; padding: 12px; border: 1px solid #333; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); position: relative; box-sizing: border-box; }
+        .turn-hunter { color: var(--hunter); font-weight: bold; font-size: 18px; }
+        .turn-monster { color: var(--monster); font-weight: bold; font-size: 18px; }
+        .stats { margin-top: 8px; font-size: 13px; display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 8px; }
         
         /* Rulebook Link Button */
-        .btn-rules { position: absolute; top: 12px; right: 12px; background: #222; border: 1px solid #555; color: #ffd700; font-size: 11px; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-rules { position: absolute; top: 10px; right: 10px; background: #222; border: 1px solid #555; color: #ffd700; font-size: 10px; padding: 4px 6px; border-radius: 4px; text-decoration: none; font-weight: bold; }
         .btn-rules:hover { background: #444; border-color: #ffd700; }
 
         .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-        button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 11px;}
-        button:hover:not(:disabled) { background: #555; transform: translateY(-1px); }
+        button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 10px; cursor: pointer; border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 11px;}
+        button:hover:not(:disabled) { background: #555; }
         button:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-attack { background: #602020; border-color: #ff3333; }
-        .btn-pass { background: #206020; border-color: #4CAF50; width: 100%; max-width: 440px; margin-top: 10px; padding: 12px; font-size: 14px;}
+        .btn-pass { background: #206020; border-color: #4CAF50; width: 100%; margin-top: 10px; padding: 12px; font-size: 14px;}
 
-        #hand-container { width: 100%; max-width: 440px; background: var(--hand-bg); border: 1px dashed #555; border-radius: 5px; padding: 10px; margin-bottom: 15px; display: flex; gap: 8px; overflow-x: auto; box-sizing: border-box; min-height: 80px; }
-        .play-card { background: #222; border: 1px solid #777; min-width: 110px; padding: 8px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        #hand-container { width: 100%; background: var(--hand-bg); border: 1px dashed #555; border-radius: 5px; padding: 8px; margin-bottom: 10px; display: flex; gap: 8px; overflow-x: auto; box-sizing: border-box; min-height: 75px; }
+        .play-card { background: #222; border: 1px solid #777; min-width: 100px; padding: 6px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .play-card:hover { background: #333; border-color: #fff; }
         .card-title { font-weight: bold; font-size: 11px; margin-bottom: 4px; color: #ffd700; }
         .card-desc { color: #aaa; }
 
-        #grid { display: grid; grid-template-columns: repeat(5, 76px); gap: 6px; margin-bottom: 10px;}
-        .card { width: 76px; height: 76px; background: var(--card); border: 2px solid #000; border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; font-size: 10px; font-weight: bold; text-align: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); transition: border-color 0.2s; }
+        /* Mobile Grid 5x5 */
+        #grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 100%; margin-bottom: 8px; padding: 0 4px; box-sizing: border-box; }
+        .card { aspect-ratio: 1 / 1; background: var(--card); border: 1px solid #000; border-radius: 5px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; font-size: 9px; font-weight: bold; text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); box-sizing: border-box; }
         
-        .highlight-move { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; animation: pulse-green 1.5s infinite; z-index: 10;}
-        .highlight-attack { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; animation: pulse-purple 1.5s infinite; z-index: 10;}
+        .highlight-move { border-color: #00ff00 !important; box-shadow: 0 0 8px #00ff00; animation: pulse-green 1.5s infinite; z-index: 10;}
+        .highlight-attack { border-color: #ff00ff !important; box-shadow: 0 0 8px #ff00ff; animation: pulse-purple 1.5s infinite; z-index: 10;}
         
         .ninho { background: var(--nest); } .esgoto { background: var(--sewer); } .suprimento { background: var(--supply); } .comum { background: var(--common); } 
         
-        .rua-container { width: 404px; display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;}
-        .gate-indicator { color: #aaa; font-size: 11px; font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; }
-        .rua { background: #111; border-color: var(--supply); width: 100%; height: 45px; flex-direction: row; }
+        /* Rua de Acesso */
+        .rua-container { width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; padding: 0 4px; box-sizing: border-box;}
+        .gate-indicator { font-size: 10px; font-weight: bold; margin-bottom: 3px; letter-spacing: 1px; transition: color 0.3s; }
+        .rua { background: #111; border-color: var(--supply); width: 100%; height: 40px; flex-direction: row; }
         
-        .cell-number { position: absolute; top: 3px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: normal; }
-        .item-indicator { position: absolute; bottom: 3px; right: 5px; font-size: 10px; color: #ffd700; font-weight: bold; }
-        .trap-indicator { position: absolute; bottom: 3px; left: 5px; color: orange; font-size: 12px; display: none; }
+        .cell-number { position: absolute; top: 2px; left: 3px; font-size: 9px; color: rgba(255,255,255,0.4); font-weight: normal; }
+        .item-indicator { position: absolute; bottom: 2px; right: 3px; font-size: 9px; color: #ffd700; font-weight: bold; }
+        .trap-indicator { position: absolute; bottom: 2px; left: 3px; color: orange; font-size: 10px; display: none; }
         
-        .tokens { font-size: 14px; margin-top: 5px; pointer-events: none; letter-spacing: 1px; }
-        .cubes-badge { position: absolute; top: -6px; right: -6px; background: var(--blood); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .tokens { font-size: 12px; margin-top: 2px; pointer-events: none; letter-spacing: 1px; }
+        .cubes-badge { position: absolute; top: -5px; right: -5px; background: var(--blood); color: #fff; width: 18px; height: 18px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         .cubes-badge.visible { display: flex; }
         
-        #log-header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; margin-bottom: 2px; }
-        #log { width: 100%; max-width: 440px; height: 130px; background: #050505; border: 1px solid #333; padding: 10px; overflow-y: auto; font-size: 11px; box-sizing: border-box; border-radius: 5px; color: #00ff00; }
+        #log-header { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; margin-bottom: 2px; }
+        #log { width: 100%; height: 120px; background: #050505; border: 1px solid #333; padding: 8px; overflow-y: auto; font-size: 11px; box-sizing: border-box; border-radius: 5px; color: #00ff00; }
         .log-monster { color: #ff5555; }
         .log-hunter { color: #55ff55; }
         .log-system { color: #ffff55; }
         .log-dice { color: #ffaa00; font-weight: bold; }
         
         .secret-log { display: none; }
-        #log.show-secrets .secret-log { display: block; opacity: 0.8; border-left: 2px solid #ff3333; padding-left: 5px; margin-left: 2px; background: rgba(255, 0, 0, 0.05); }
+        #log.show-secrets .secret-log { display: block; opacity: 0.8; border-left: 2px solid #ff3333; padding-left: 4px; margin-left: 2px; background: rgba(255, 0, 0, 0.05); }
 
-        @keyframes pulse-green { 0% { box-shadow: 0 0 5px #00ff00; } 50% { box-shadow: 0 0 15px #00ff00; } 100% { box-shadow: 0 0 5px #00ff00; } }
-        @keyframes pulse-purple { 0% { box-shadow: 0 0 5px #ff00ff; } 50% { box-shadow: 0 0 15px #ff00ff; } 100% { box-shadow: 0 0 5px #ff00ff; } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 4px #00ff00; } 50% { box-shadow: 0 0 12px #00ff00; } 100% { box-shadow: 0 0 4px #00ff00; } }
+        @keyframes pulse-purple { 0% { box-shadow: 0 0 4px #ff00ff; } 50% { box-shadow: 0 0 12px #ff00ff; } 100% { box-shadow: 0 0 4px #ff00ff; } }
     </style>
 </head>
 <body>
 
     <div id="pass-screen" class="active">
         <h1 id="pass-title">Pass the device to: ...</h1>
-        <p style="color: #888; max-width: 300px; margin: 10px auto;">Do not let other players see your hand or your hidden position.</p>
-        <button onclick="startTurn()" style="padding: 15px 40px; font-size: 20px; margin-top: 30px; background: #4CAF50; border: none; border-radius: 8px;">START TURN</button>
+        <p style="color: #888; max-width: 280px; margin: 10px auto; font-size: 12px;">Do not let other players see your hand or your hidden position.</p>
+        <button onclick="startTurn()" style="padding: 15px 35px; font-size: 18px; margin-top: 20px; background: #4CAF50; border: none; border-radius: 8px;">START TURN</button>
     </div>
 
     <div id="game-screen">
         <div id="status-panel">
-            <a href="https://github.com/leonardoaraujosilva/25th-neighborhood/blob/main/README.md" target="_blank" class="btn-rules">📖 Rulebook</a>
+            <a href="https://github.com/leonardoaraujosilva/25th-neighborhood/blob/main/README.md" target="_blank" class="btn-rules">📖 Rules</a>
             <div id="current-player-name" class="turn-hunter">Loading...</div>
             <div class="stats" id="player-stats">
                 <span id="stat-hp">HP: -</span>
                 <span id="stat-ammo">Ammo: -</span>
                 <span id="stat-actions">Actions: -</span>
             </div>
+            
+            <div id="round-tracker" style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:8px; padding: 4px; border-radius: 4px; background: rgba(0,0,0,0.5); display: none;">
+                🚁 HELICOPTER ETA: 4 ROUND(S)
+            </div>
+
             <div class="actions">
                 <button onclick="actionAttack()" class="btn-attack" id="btn-attack">Attack (1 Action)</button>
                 <button onclick="actionFeed()" id="btn-feed" style="display:none;">Devour Nest (1 Action)</button>
@@ -101,7 +118,7 @@
         <div id="grid"></div>
         
         <div class="rua-container">
-            <div class="gate-indicator">⬆️ EXIT GATE (Connects to House 23 only) ⬆️</div>
+            <div class="gate-indicator">⛔ GATE LOCKED (NESTS INTACT) ⛔</div>
             <div id="rua-acesso" class="card rua" onclick="handleCellClick('rua')">
                 <div class="cell-number">STREET</div>
                 <div style="width: 100%; text-align: center;">Rescue Area</div>
@@ -113,8 +130,8 @@
         <button onclick="endTurn()" class="btn-pass" id="btn-pass">End Turn</button>
         
         <div id="log-header">
-            <span style="font-size: 12px; font-weight: bold; color: #888;">ACTION LOG</span>
-            <span id="eye-toggle" onclick="toggleEye()" style="cursor: pointer; font-size: 16px; user-select: none;" title="Show/Hide Monster's stealth actions">👁️</span>
+            <span style="font-size: 11px; font-weight: bold; color: #888;">ACTION LOG</span>
+            <span id="eye-toggle" onclick="toggleEye()" style="cursor: pointer; font-size: 18px; user-select: none;" title="Toggle Monster Stealth Log">🙈</span>
         </div>
         <div id="log"></div>
     </div>
@@ -137,6 +154,8 @@
         let targetingMode = false;
         let currentAttack = null; 
         let secretsVisible = false;
+        let escapeCountdownActive = false;
+        let rescueRoundsLeft = 4;
 
         function toggleEye() {
             secretsVisible = !secretsVisible;
@@ -149,7 +168,7 @@
             
             if (p && p.type === 'monster') {
                 logBox.classList.add('show-secrets');
-                eye.style.filter = "none";
+                eye.innerText = "👁️";
                 eye.style.pointerEvents = "none"; 
                 eye.style.opacity = "0.5";
             } else {
@@ -157,15 +176,14 @@
                 eye.style.opacity = "1";
                 if (secretsVisible) {
                     logBox.classList.add('show-secrets');
-                    eye.style.filter = "none";
+                    eye.innerText = "👁️";
                 } else {
                     logBox.classList.remove('show-secrets');
-                    eye.style.filter = "grayscale(100%)";
+                    eye.innerText = "🙈";
                 }
             }
         }
 
-        // CARD DATABASE (ENGLISH)
         const cardsDB = {
             'h_racao': { name: 'MRE Ration', desc: '+3 HP.', type: 'Free', action: (p) => { 
                 p.hp = Math.min(5, p.hp + 3); 
@@ -221,6 +239,7 @@
                 players.forEach(h => { if(h.type==='hunter' && h.pos === p.pos) h.hp -= roll.hits; });
                 alert(`PURE FURY!\nDice: ${roll.logStr}\nDamage: ${roll.hits}`); 
                 logAction(`Roared in Fury at ${getPosName(p.pos)} (Revealed)! <span class="log-dice">${roll.logStr} -> ${roll.hits} damage</span>`);
+                checkWinState(); 
                 return true;
             }},
             'm_despiste': { name: 'Misdirection', desc: '1 Free move.', type: 'Free', action: (p) => {
@@ -311,8 +330,7 @@
 
         function startTurn() {
             if(p.hp <= 0 && p.type === 'hunter') {
-                alert("You are DEAD. Pass the turn.");
-                return endTurn();
+                return; 
             }
             document.getElementById('pass-screen').classList.remove('active');
             document.getElementById('game-screen').classList.add('active');
@@ -322,7 +340,17 @@
         function endTurn() {
             if (isSetupPhase) return; 
             if (p.type === 'monster' && p.revealedTurns > 0) p.revealedTurns--;
+            
             currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
+            
+            // Se completou uma rodada inteira (voltou para o Caçador 1) e o timer já foi ativado
+            if (currentTurnIndex === 0 && escapeCountdownActive) {
+                rescueRoundsLeft--;
+                if (rescueRoundsLeft === 0) {
+                    logSystem(`SYSTEM: 🚁 THE HELICOPTER HAS ARRIVED! The Escape Gate is open!`);
+                }
+            }
+            
             preparePassScreen();
         }
 
@@ -364,6 +392,11 @@
         }
 
         function isValidMove(curr, tgt, type) {
+            // Caçadores só podem ir para a rua se o timer estiver ativo e a contagem tiver chegado a 0
+            if (type === 'hunter' && tgt === 'rua') {
+                if (!escapeCountdownActive || rescueRoundsLeft > 0) return false;
+            }
+            
             if (type === 'monster' && curr !== 'rua' && tgt !== 'rua' && board[curr].type === 'esgoto' && board[tgt].type === 'esgoto') return true;
             return getDistance(curr, tgt) === 1;
         }
@@ -406,7 +439,13 @@
             if (targetingMode) { resolveAttack(targetId); return; }
 
             if (p.actions <= 0) return alert("No actions left!");
-            if (!isValidMove(p.pos, targetId, p.type)) return alert("Invalid move! (Green locations only).");
+            
+            if (!isValidMove(p.pos, targetId, p.type)) {
+                if (targetId === 'rua' && p.type === 'hunter' && (!escapeCountdownActive || rescueRoundsLeft > 0) && getDistance(p.pos, 'rua') === 1) {
+                    return alert("The gate is locked! All nests must be consumed first to start the rescue countdown.");
+                }
+                return alert("Invalid move! (Green locations only).");
+            }
 
             let oldPos = p.pos;
 
@@ -430,6 +469,7 @@
             }
 
             updateUI();
+            checkWinState(); 
         }
 
         function actionAttack() {
@@ -489,17 +529,38 @@
             logAction(`Devoured biomass at [${getPosName(p.pos)}].`, true);
             
             if (p.ninhos >= 3 && !p.alpha) {
-                p.alpha = true; p.hp += 8;
-                logSystem("!!! THE MONSTER REACHED ALPHA STAGE AND MUTATED (+8 HP) !!!");
+                p.alpha = true; 
+                p.hp += 8;
+                escapeCountdownActive = true; // ATIVA O TIMER AO CONSUMIR TODOS OS NINHOS
+                rescueRoundsLeft = 4;
+                logSystem("!!! ALL NESTS CONSUMED! THE MONSTER EVOLVED TO ALPHA & HELICOPTER DISPATCHED (4 ROUNDS ETA) !!!");
             }
             updateUI();
         }
 
         function checkWinState() {
             let m = players[3];
-            let aliveHunters = players.filter(h => h.type === 'hunter' && h.hp > 0).length;
-            if(m.hp <= 0) document.body.innerHTML = "<h1 style='color:green; text-align:center; margin-top:20%'>HUNTERS' VICTORY!</h1>";
-            else if (aliveHunters === 0) document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%'>MONSTER'S VICTORY!</h1>";
+            let deadHunters = players.filter(h => h.type === 'hunter' && h.hp <= 0).length;
+            
+            // MONSTER WINS IF ANY HUNTER DIES (INSTA-KILL)
+            if(deadHunters > 0) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%'>MONSTER'S VICTORY!</h1><p style='color:white; text-align:center;'>A Hunter was killed!</p>";
+                return;
+            }
+            
+            if(m.hp <= 0) {
+                document.body.innerHTML = "<h1 style='color:green; text-align:center; margin-top:20%'>HUNTERS' VICTORY!</h1><p style='color:white; text-align:center;'>The Monster was destroyed!</p>";
+                return;
+            }
+
+            // ESCAPE: Hunters win if rescue arrived and all 3 reach the street
+            if (escapeCountdownActive && rescueRoundsLeft <= 0) {
+                let aliveHunters = players.filter(h => h.type === 'hunter');
+                let escapedHunters = aliveHunters.filter(h => h.pos === 'rua').length;
+                if (escapedHunters === 3) {
+                    document.body.innerHTML = "<h1 style='color:green; text-align:center; margin-top:20%'>HUNTERS' VICTORY!</h1><p style='color:white; text-align:center;'>The squad escaped successfully!</p>";
+                }
+            }
         }
 
         function updateUI() {
@@ -508,6 +569,29 @@
             document.getElementById('stat-hp').innerText = `HP: ${p.hp}`;
             document.getElementById('stat-ammo').innerText = p.type === 'hunter' ? `Ammo: ${p.ammo}` : `Evolution: ${p.ninhos}/3`;
             document.getElementById('stat-actions').innerText = `Actions: ${isSetupPhase ? 0 : p.actions}`;
+            
+            // Gerenciamento visual do Tracker do Helicóptero e Portão
+            let rt = document.getElementById('round-tracker');
+            let gateInd = document.querySelector('.gate-indicator');
+
+            if (isSetupPhase || !escapeCountdownActive) {
+                rt.style.display = 'none';
+                gateInd.innerText = `⛔ GATE LOCKED (WAITING FOR ALL NESTS) ⛔`;
+                gateInd.style.color = "#ff3333";
+            } else {
+                rt.style.display = 'block';
+                if (rescueRoundsLeft > 0) {
+                    rt.innerText = `🚁 HELICOPTER ETA: ${rescueRoundsLeft} ROUND(S)`;
+                    rt.style.color = "orange";
+                    gateInd.innerText = `⛔ GATE LOCKED (ETA: ${rescueRoundsLeft} RDS) ⛔`;
+                    gateInd.style.color = "#ff3333";
+                } else {
+                    rt.innerText = `🚁 HELICOPTER WAITING! ESCAPE NOW!`;
+                    rt.style.color = "#00ff00";
+                    gateInd.innerText = `⬆️ EXIT GATE OPEN (House 23) ⬆️`;
+                    gateInd.style.color = "#00ff00";
+                }
+            }
             
             let passBtn = document.getElementById('btn-pass');
             let atkBtn = document.getElementById('btn-attack');

@@ -96,7 +96,7 @@ Combat uses detailed dice rolls. Rolls of **4, 5, or 6** count as **Hits [✓]**
 | :--- | :--- | :---: | :---: | :---: |
 | **Hunter** | Handgun (Basic Attack) | **4 D6** (4+ hits) | Same house or Orthogonal (1 House) | 1 Ammo |
 | **Hunter** | Shotgun (Card) | **5 D6** (4+ hits) | Same house only | 1 Ammo |
-| **Monster** | Claws (Stage 1) | **2 D6** (5+ hits) | Same house only | Free |
+| **Monster** | Claps (Stage 1) | **2 D6** (5+ hits) | Same house only | Free |
 | **Monster** | Alpha Fury (Stage 3) | **3 D6** (4+ hits) | Same house only | Free |
 
 ### How Targeting Works in the App:
@@ -121,8 +121,13 @@ Combat uses detailed dice rolls. Rolls of **4, 5, or 6** count as **Hits [✓]**
 
 ---
 
-## 🏆 ALPHA EVOLUTION & VICTORY CONDITIONS
+## 🏆 ALPHA EVOLUTION, THE HELICOPTER & VICTORY CONDITIONS
 
-* **Alpha Evolution:** Devouring all **3 Nests** evolves the Monster into the Alpha Stage. It gains **+8 HP**, its attacks upgrade to **3 D6 (4+ hits)**, and it becomes **permanently visible**.
-* **Hunters' Victory:** Reduce the Monster's HP to **0**.
-* **Monster's Victory:** Eliminate all Hunters in the neighborhood.
+* **Alpha Evolution & Helicopter Trigger:** When the Monster devours all **3 Nests**, it evolves into the Alpha Stage (+8 HP, upgrades to 3 D6 attacks, permanently visible) and **triggers the Helicopter Survival Timer (4 Rounds ETA)**. Before all nests are consumed, the escape gate remains strictly locked and the timer is hidden.
+
+### Hunters' Victory (Choose One):
+1. **Exterminate:** Reduce the Monster's HP to **0**.
+2. **Evacuate:** Survive the 4-round countdown after all nests are consumed, then have all surviving Hunters reach the Street to escape.
+
+### Monster's Victory (Instant Kill):
+* **Eliminate a Hunter:** The squad cannot afford casualties. If the Monster reduces **at least 1 Hunter's HP to 0**, the Monster wins instantly!
