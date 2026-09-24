@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>25th Neighborhood - Stealth Engine</title>
+    <style>
+        :root {
+            --bg: #121212; --text: #e0e0e0; --card: #2d2d2d;
+            --nest: #4a0d0d; --sewer: #1a3042; --supply: #6b5316; --common: #2a2a2a; --blood: #ff3333;
+            --hunter: #4CAF50; --monster: #9c27b0; --hand-bg: #1f1f1f;
+        }
+        body { font-family: 'Courier New', monospace; background: var(--bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        
+        #game-screen, #pass-screen { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
+        #pass-screen.active { display: flex; height: 90vh; flex-direction: column; justify-content: center; text-align: center; }
+        #game-screen.active { display: flex; }
+
+        #status-panel { width: 100%; max-width: 440px; background: #0a0a0a; padding: 15px; border: 1px solid #333; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); position: relative; }
+        .turn-hunter { color: var(--hunter); font-weight: bold; font-size: 20px; }
+        .turn-monster { color: var(--monster); font-weight: bold; font-size: 20px; }
+        .stats { margin-top: 8px; font-size: 14px; display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        
+        /* Rulebook Link Button */
+        .btn-rules { position: absolute; top: 12px; right: 12px; background: #222; border: 1px solid #555; color: #ffd700; font-size: 11px; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-weight: bold; }
+        .btn-rules:hover { background: #444; border-color: #ffd700; }
+
+        .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        button { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-family: inherit; font-weight: bold; font-size: 11px;}
+        button:hover:not(:disabled) { background: #555; transform: translateY(-1px); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-attack { background: #602020; border-color: #ff3333; }
+        .btn-pass { background: #206020; border-color: #4CAF50; width: 100%; max-width: 440px; margin-top: 10px; padding: 12px; font-size: 14px;}
+
+        #hand-container { width: 100%; max-width: 440px; background: var(--hand-bg); border: 1px dashed #555; border-radius: 5px; padding: 10px; margin-bottom: 15px; display: flex; gap: 8px; overflow-x: auto; box-sizing: border-box; min-height: 80px; }
+        .play-card { background: #222; border: 1px solid #777; min-width: 110px; padding: 8px; border-radius: 4px; font-size: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .play-card:hover { background: #333; border-color: #fff; }
+        .card-title { font-weight: bold; font-size: 11px; margin-bottom: 4px; color: #ffd700; }
+        .card-desc { color: #aaa; }
+
+        #grid { display: grid; grid-template-columns: repeat(5, 76px); gap: 6px; margin-bottom: 10px;}
+        .card { width: 76px; height: 76px; background: var(--card); border: 2px solid #000; border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; font-size: 10px; font-weight: bold; text-align: center; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); transition: border-color 0.2s; }
+        
+        .highlight-move { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; animation: pulse-green 1.5s infinite; z-index: 10;}
+        .highlight-attack { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; animation: pulse-purple 1.5s infinite; z-index: 10;}
+        
+        .ninho { background: var(--nest); } .esgoto { background: var(--sewer); } .suprimento { background: var(--supply); } .comum { background: var(--common); } 
+        
+        .rua-container { width: 404px; display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;}
+        .gate-indicator { color: #aaa; font-size: 11px; font-weight: bold; margin-bottom: 5px; letter-spacing: 1px; }
+        .rua { background: #111; border-color: var(--supply); width: 100%; height: 45px; flex-direction: row; }
+        
+        .cell-number { position: absolute; top: 3px; left: 5px; font-size: 10px; color: rgba(255,255,255,0.4); font-weight: normal; }
+        .item-indicator { position: absolute; bottom: 3px; right: 5px; font-size: 10px; color: #ffd700; font-weight: bold; }
+        .trap-indicator { position: absolute; bottom: 3px; left: 5px; color: orange; font-size: 12px; display: none; }
+        
+        .tokens { font-size: 14px; margin-top: 5px; pointer-events: none; letter-spacing: 1px; }
+        .cubes-badge { position: absolute; top: -6px; right: -6px; background: var(--blood); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 1px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .cubes-badge.visible { display: flex; }
+        
+        #log-header { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; margin-bottom: 2px; }
+        #log { width: 100%; max-width: 440px; height: 130px; background: #050505; border: 1px solid #333; padding: 10px; overflow-y: auto; font-size: 11px; box-sizing: border-box; border-radius: 5px; color: #00ff00; }
+        .log-monster { color: #ff5555; }
+        .log-hunter { color: #55ff55; }
+        .log-system { color: #ffff55; }
+        .log-dice { color: #ffaa00; font-weight: bold; }
+        
+        .secret-log { display: none; }
+        #log.show-secrets .secret-log { display: block; opacity: 0.8; border-left: 2px solid #ff3333; padding-left: 5px; margin-left: 2px; background: rgba(255, 0, 0, 0.05); }
+
+        @keyframes pulse-green { 0% { box-shadow: 0 0 5px #00ff00; } 50% { box-shadow: 0 0 15px #00ff00; } 100% { box-shadow: 0 0 5px #00ff00; } }
+        @keyframes pulse-purple { 0% { box-shadow: 0 0 5px #ff00ff; } 50% { box-shadow: 0 0 15px #ff00ff; } 100% { box-shadow: 0 0 5px #ff00ff; } }
+    </style>
+</head>
+<body>
+
+    <div id="pass-screen" class="active">
+        <h1 id="pass-title">Pass the device to: ...</h1>
+        <p style="color: #888; max-width: 300px; margin: 10px auto;">Do not let other players see your hand or your hidden position.</p>
+        <button onclick="startTurn()" style="padding: 15px 40px; font-size: 20px; margin-top: 30px; background: #4CAF50; border: none; border-radius: 8px;">START TURN</button>
+    </div>
+
+    <div id="game-screen">
+        <div id="status-panel">
+            <a href="https://github.com/leonardoaraujosilva/25th-neighborhood/blob/main/README.md" target="_blank" class="btn-rules">📖 Rulebook</a>
+            <div id="current-player-name" class="turn-hunter">Loading...</div>
+            <div class="stats" id="player-stats">
+                <span id="stat-hp">HP: -</span>
+                <span id="stat-ammo">Ammo: -</span>
+                <span id="stat-actions">Actions: -</span>
+            </div>
+            <div class="actions">
+                <button onclick="actionAttack()" class="btn-attack" id="btn-attack">Attack (1 Action)</button>
+                <button onclick="actionFeed()" id="btn-feed" style="display:none;">Devour Nest (1 Action)</button>
+                <button onclick="actionSearch()" id="btn-search">Search Item (1 Action)</button>
+            </div>
+        </div>
+
+        <div id="hand-container"></div>
+
+        <div id="grid"></div>
+        
+        <div class="rua-container">
+            <div class="gate-indicator">⬆️ EXIT GATE (Connects to House 23 only) ⬆️</div>
+            <div id="rua-acesso" class="card rua" onclick="handleCellClick('rua')">
+                <div class="cell-number">STREET</div>
+                <div style="width: 100%; text-align: center;">Rescue Area</div>
+                <div class="tokens" id="tokens-rua"></div>
+                <div class="cubes-badge" id="badge-rua">0</div>
+            </div>
+        </div>
+
+        <button onclick="endTurn()" class="btn-pass" id="btn-pass">End Turn</button>
+        
+        <div id="log-header">
+            <span style="font-size: 12px; font-weight: bold; color: #888;">ACTION LOG</span>
+            <span id="eye-toggle" onclick="toggleEye()" style="cursor: pointer; font-size: 16px; user-select: none;" title="Show/Hide Monster's stealth actions">👁️</span>
+        </div>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function getPosName(pos) { return pos === 'rua' ? 'Street' : `House ${pos + 1}`; }
+
+        function rollDetailedDice(qtd, minSuccess) {
+            let hits = 0; let results = [];
+            for(let i=0; i<qtd; i++) {
+                let val = Math.floor(Math.random() * 6) + 1;
+                let isHit = val >= minSuccess;
+                if (isHit) hits++;
+                results.push({ val: val, hit: isHit });
+            }
+            let logStr = results.map(r => r.hit ? `[${r.val}✓]` : `[${r.val}✗]`).join(" ");
+            return { hits: hits, logStr: logStr };
+        }
+
+        let targetingMode = false;
+        let currentAttack = null; 
+        let secretsVisible = false;
+
+        function toggleEye() {
+            secretsVisible = !secretsVisible;
+            updateLogVisibility();
+        }
+
+        function updateLogVisibility() {
+            const logBox = document.getElementById('log');
+            const eye = document.getElementById('eye-toggle');
+            
+            if (p && p.type === 'monster') {
+                logBox.classList.add('show-secrets');
+                eye.style.filter = "none";
+                eye.style.pointerEvents = "none"; 
+                eye.style.opacity = "0.5";
+            } else {
+                eye.style.pointerEvents = "auto";
+                eye.style.opacity = "1";
+                if (secretsVisible) {
+                    logBox.classList.add('show-secrets');
+                    eye.style.filter = "none";
+                } else {
+                    logBox.classList.remove('show-secrets');
+                    eye.style.filter = "grayscale(100%)";
+                }
+            }
+        }
+
+        // CARD DATABASE (ENGLISH)
+        const cardsDB = {
+            'h_racao': { name: 'MRE Ration', desc: '+3 HP.', type: 'Free', action: (p) => { 
+                p.hp = Math.min(5, p.hp + 3); 
+                logAction(`Used [MRE Ration] and restored +3 HP.`); return true; 
+            }},
+            'h_municao': { name: 'Ammo Crate', desc: '+3 Ammo.', type: 'Free', action: (p) => { 
+                p.ammo += 3; 
+                logAction(`Opened an [Ammo Crate] (+3 ammo).`); return true; 
+            }},
+            'h_sinalizador': { name: 'Flare', desc: 'Reveals monster (Same/Adj).', type: '1 Action', action: (p, index) => {
+                if (p.actions < 1) { alert("No actions left."); return false; }
+                p.actions--;
+                let m = players[3];
+                if (getDistance(p.pos, m.pos) <= 1) {
+                    m.revealedTurns = 2; 
+                    alert("The red light illuminates the beast in the shadows!");
+                    logAction(`Fired a Flare and REVEALED the beast at ${getPosName(m.pos)}!`);
+                } else {
+                    alert("The flare illuminates the area, but there is no sign of the beast.");
+                    logAction(`Fired a Flare, but the shadows are empty.`);
+                }
+                return true;
+            }},
+            'h_armadilha': { name: 'Bear Trap', desc: 'Plant in current house.', type: 'Free', action: (p) => {
+                if(p.pos === 'rua' || board[p.pos].type === 'ninho') { alert("Cannot plant traps in Nests or on the Street."); return false; }
+                board[p.pos].trap = true; 
+                logAction(`Secretly set a [Bear Trap] at ${getPosName(p.pos)}.`); return true;
+            }},
+            'h_escopeta': { name: 'Shotgun', desc: '5 Dice. Same house.', type: '1 Action', action: (p, index) => {
+                if(p.actions < 1 || p.ammo < 1) { alert("No actions or ammo."); return false; }
+                let m = players[3];
+                let isVisible = m.alpha || m.revealedTurns > 0;
+                
+                currentAttack = { name: 'Shotgun', dice: 5, success: 4, range: 0, cost: 1, isCard: true, cardIndex: index };
+                
+                if (isVisible && getDistance(p.pos, m.pos) === 0) {
+                    resolveAttack(m.pos);
+                    return false; 
+                } else {
+                    targetingMode = true; updateUI();
+                    logSystem("TARGETING (Shotgun): Select the Purple house (Same house only) to fire blindly.");
+                    return false; 
+                }
+            }},
+            'm_regen': { name: 'Regeneration', desc: '+3 HP.', type: '1 Action', action: (p) => {
+                if(p.actions < 1) { alert("No actions left."); return false; }
+                p.actions--; p.hp += 3; 
+                logAction(`Regenerated wounds in the shadows.`, true); return true;
+            }},
+            'm_furia': { name: 'Pure Fury', desc: 'Free attack (Reveals).', type: 'Free', action: (p) => {
+                p.revealedTurns = 2; 
+                let roll = rollDetailedDice(2, 4);
+                players.forEach(h => { if(h.type==='hunter' && h.pos === p.pos) h.hp -= roll.hits; });
+                alert(`PURE FURY!\nDice: ${roll.logStr}\nDamage: ${roll.hits}`); 
+                logAction(`Roared in Fury at ${getPosName(p.pos)} (Revealed)! <span class="log-dice">${roll.logStr} -> ${roll.hits} damage</span>`);
+                return true;
+            }},
+            'm_despiste': { name: 'Misdirection', desc: '1 Free move.', type: 'Free', action: (p) => {
+                alert("Select a Green house on the map to escape for free.");
+                p.actions++; p.isEvading = true; 
+                logAction(`Prepares an evasive maneuver...`, true); return true;
+            }}
+        };
+
+        let hunterDeck = ['h_racao', 'h_racao', 'h_municao', 'h_municao', 'h_sinalizador', 'h_sinalizador', 'h_armadilha', 'h_escopeta', 'h_escopeta'];
+        let monsterDeck = ['m_regen', 'm_regen', 'm_furia', 'm_furia', 'm_despiste', 'm_despiste'];
+
+        const mapLayout = [
+            { t: 'ninho', l: 'NEST' }, { t: 'ninho', l: 'NEST' }, { t: 'ninho', l: 'NEST' },
+            { t: 'esgoto', l: 'SEWER' }, { t: 'esgoto', l: 'SEWER' }, { t: 'esgoto', l: 'SEWER' }, { t: 'esgoto', l: 'SEWER' },
+            { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' },
+            { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' }, { t: 'suprimento', l: 'DEPOT' },
+            { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' },
+            { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }, { t: 'comum', l: 'HOUSE' }
+        ];
+
+        let board = [];
+        let players = [
+            { id: 0, name: 'Hunter 1 (🟩)', type: 'hunter', pos: 'rua', hp: 5, ammo: 4, actions: 2, icon: '🟩', hand: ['h_sinalizador'] },
+            { id: 1, name: 'Hunter 2 (🟦)', type: 'hunter', pos: 'rua', hp: 5, ammo: 4, actions: 2, icon: '🟦', hand: ['h_armadilha'] },
+            { id: 2, name: 'Hunter 3 (🟨)', type: 'hunter', pos: 'rua', hp: 5, ammo: 4, actions: 2, icon: '🟨', hand: ['h_racao'] },
+            { id: 3, name: 'The Monster (🐺)', type: 'monster', pos: -1, hp: 12, actions: 1, icon: '🐺', ninhos: 0, alpha: false, revealedTurns: 0, hand: ['m_despiste', 'm_regen'] }
+        ];
+        
+        let turnOrder = [0, 3, 1, 3, 2, 3]; 
+        let currentTurnIndex = 0;
+        let p = null; 
+        let isSetupPhase = true;
+
+        function init() {
+            hunterDeck = hunterDeck.sort(() => Math.random() - 0.5);
+            monsterDeck = monsterDeck.sort(() => Math.random() - 0.5);
+            let deck = [...mapLayout].sort(() => Math.random() - 0.5);
+            const grid = document.getElementById('grid');
+            
+            deck.forEach((card, i) => {
+                board[i] = { type: card.t, label: card.l, blood: 0, items: card.t === 'suprimento' ? 2 : 0, trap: false };
+                let el = document.createElement('div');
+                el.className = `card ${card.t}`;
+                el.id = `cell-${i}`;
+                el.onclick = () => handleCellClick(i);
+                el.innerHTML = `
+                    <div class="cell-number">${i + 1}</div>
+                    <div class="item-indicator" id="item-${i}" style="display:${board[i].items > 0 ? 'block' : 'none'}">📦 ${board[i].items}</div>
+                    <span>${card.l}</span>
+                    <div class="trap-indicator" id="trap-${i}">⚠️</div>
+                    <div class="tokens" id="tokens-${i}"></div>
+                    <div class="cubes-badge" id="badge-${i}">0</div>
+                `;
+                grid.appendChild(el);
+            });
+            board['rua'] = { type: 'rua', blood: 0, items: 0, trap: false };
+            
+            logSystem("SYSTEM: Neighborhood Generated. The Monster lurks in the dark.");
+            preparePassScreen();
+        }
+
+        function preparePassScreen() {
+            targetingMode = false; currentAttack = null; secretsVisible = false;
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('pass-screen').classList.add('active');
+            
+            if (isSetupPhase) {
+                p = players[3];
+                document.getElementById('pass-title').innerHTML = `SETUP PHASE<br><br>Pass to:<br><span style="color:var(--monster)">${p.name}</span>`;
+            } else {
+                p = players[turnOrder[currentTurnIndex]];
+                
+                if(p.type === 'hunter') p.actions = 2;
+                if(p.type === 'monster') p.actions = 1;
+
+                if(p.type === 'monster' && currentTurnIndex === 1) { 
+                    if(p.hand.length < 3 && monsterDeck.length > 0) {
+                        p.hand.push(monsterDeck.pop());
+                        logSystem(`SYSTEM: The Monster generated 1 Instinct card in the dark.`);
+                    }
+                }
+
+                checkWinState();
+                document.getElementById('pass-title').innerHTML = `Pass to:<br><span style="color:${p.type==='hunter'?'var(--hunter)':'var(--monster)'}">${p.name}</span>`;
+            }
+        }
+
+        function startTurn() {
+            if(p.hp <= 0 && p.type === 'hunter') {
+                alert("You are DEAD. Pass the turn.");
+                return endTurn();
+            }
+            document.getElementById('pass-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+            updateUI();
+        }
+
+        function endTurn() {
+            if (isSetupPhase) return; 
+            if (p.type === 'monster' && p.revealedTurns > 0) p.revealedTurns--;
+            currentTurnIndex = (currentTurnIndex + 1) % turnOrder.length;
+            preparePassScreen();
+        }
+
+        function playCard(index) {
+            if (isSetupPhase) return alert("Cannot play during setup.");
+            if (targetingMode) return alert("Cancel current targeting before playing cards.");
+            
+            let cardId = p.hand[index];
+            let cardData = cardsDB[cardId];
+            if(confirm(`Play ${cardData.name}?\nEffect: ${cardData.desc}`)) {
+                if(cardData.action(p, index)) {
+                    p.hand.splice(index, 1);
+                    updateUI();
+                }
+            }
+        }
+
+        function getDistance(curr, tgt) {
+            if (curr === tgt) return 0;
+            if (curr === 'rua') return tgt === 22 ? 1 : 99;
+            if (tgt === 'rua') return curr === 22 ? 1 : 99;
+            let cR = Math.floor(curr/5), cC = curr%5;
+            let tR = Math.floor(tgt/5), tC = tgt%5;
+            let dR = Math.abs(cR - tR), dC = Math.abs(cC - tC);
+            if ((dR === 1 && dC === 0) || (dR === 0 && dC === 1)) return 1;
+            return 99; 
+        }
+
+        function isValidSpawn(targetId) {
+            if (targetId === 'rua' || targetId === 22) return false;
+            if (board[targetId].type === 'ninho') return false;
+            let cR = Math.floor(targetId/5), cC = targetId%5;
+            let orthos = [
+                targetId - 5, targetId + 5, 
+                (cC > 0) ? targetId - 1 : -1, (cC < 4) ? targetId + 1 : -1  
+            ];
+            for (let o of orthos) { if (o >= 0 && o < 25 && board[o].type === 'ninho') return false; }
+            return true;
+        }
+
+        function isValidMove(curr, tgt, type) {
+            if (type === 'monster' && curr !== 'rua' && tgt !== 'rua' && board[curr].type === 'esgoto' && board[tgt].type === 'esgoto') return true;
+            return getDistance(curr, tgt) === 1;
+        }
+
+        function resolveAttack(targetId) {
+            let dist = getDistance(p.pos, targetId);
+            if (dist > currentAttack.range) return alert(`Target out of range.`);
+            if (dist === 99) return alert("Target must be orthogonal (front/sides/back).");
+
+            p.actions--; p.ammo -= currentAttack.cost;
+            let roll = rollDetailedDice(currentAttack.dice, currentAttack.success);
+            let m = players[3];
+            let hitMsg = "";
+
+            if (m.pos === targetId) {
+                m.hp -= roll.hits;
+                hitMsg = `Struck something in the dark! (${roll.hits} damage)`;
+                if (roll.hits > 0) m.revealedTurns = 2;
+            } else {
+                hitMsg = `Nothing was there.`;
+            }
+
+            alert(`Attack at ${getPosName(targetId)}\nDice: ${roll.logStr}\nHits: ${roll.hits}\n\n${hitMsg}`);
+            logAction(`Fired [${currentAttack.name}] at ${getPosName(targetId)}. <span class="log-dice">${roll.logStr} -> ${roll.hits} hit(s)</span>. ${hitMsg}`);
+
+            if (currentAttack.isCard) p.hand.splice(currentAttack.cardIndex, 1);
+            targetingMode = false; currentAttack = null;
+            updateUI(); checkWinState();
+        }
+
+        function handleCellClick(targetId) {
+            if (isSetupPhase) {
+                if (!isValidSpawn(targetId)) return alert("Cannot spawn in Nests, adjacent to Nests, or at the Gate.");
+                p.pos = targetId; isSetupPhase = false;
+                logSystem(`SYSTEM: The Monster selected its starting Den. The hunt begins!`);
+                currentTurnIndex = 0; preparePassScreen();
+                return;
+            }
+
+            if (targetingMode) { resolveAttack(targetId); return; }
+
+            if (p.actions <= 0) return alert("No actions left!");
+            if (!isValidMove(p.pos, targetId, p.type)) return alert("Invalid move! (Green locations only).");
+
+            let oldPos = p.pos;
+
+            if (p.type === 'monster') {
+                for(let i=0; i<25; i++) if(board[i].blood > 0) board[i].blood--;
+                if(board['rua'].blood > 0) board['rua'].blood--;
+                board[oldPos].blood = 3; 
+                
+                if(targetId !== 'rua' && board[targetId].trap) {
+                    alert("THE BEAR TRAP TRIGGERED!"); 
+                    p.hp -= 2; p.revealedTurns = 2; board[targetId].trap = false;
+                    logSystem(`SYSTEM: The Trap at ${getPosName(targetId)} caught the monster! (Revealed)`);
+                }
+                if(p.isEvading) p.isEvading = false;
+                
+                p.pos = targetId; p.actions--;
+                logAction(`Moved from [${getPosName(oldPos)}] to [${getPosName(targetId)}].`, true);
+            } else {
+                p.pos = targetId; p.actions--;
+                logAction(`Moved from [${getPosName(oldPos)}] to [${getPosName(targetId)}].`);
+            }
+
+            updateUI();
+        }
+
+        function actionAttack() {
+            if (p.actions <= 0) return alert("No actions left.");
+            
+            if (p.type === 'hunter') {
+                if (p.ammo <= 0) return alert("No ammo left!");
+                
+                let m = players[3];
+                let isVisible = m.alpha || m.revealedTurns > 0;
+                currentAttack = { name: 'Handgun', dice: 4, success: 4, range: 1, cost: 1, isCard: false };
+                
+                if (isVisible && getDistance(p.pos, m.pos) <= 1) {
+                    resolveAttack(m.pos);
+                } else {
+                    targetingMode = true; updateUI();
+                    logSystem("TARGETING: Click a Purple house to fire blindly into the dark.");
+                }
+            } else {
+                p.actions--;
+                p.revealedTurns = 2; 
+                let diceQtd = p.alpha ? 3 : 2;
+                let minSuc = p.alpha ? 4 : 5;
+                
+                let roll = rollDetailedDice(diceQtd, minSuc);
+                alert(`Attack!\nDice: ${roll.logStr}\nDamage: ${roll.hits}`);
+                
+                logAction(`Struck fiercely at ${getPosName(p.pos)} and REVEALED its position! <span class="log-dice">${roll.logStr} -> ${roll.hits} damage</span>.`);
+                players.forEach(h => { if (h.type === 'hunter' && h.pos === p.pos) h.hp -= roll.hits; });
+                
+                updateUI(); checkWinState();
+            }
+        }
+
+        function cancelAttack() { targetingMode = false; currentAttack = null; logSystem("TARGETING: Canceled."); updateUI(); }
+
+        function actionSearch() {
+            if (p.type !== 'hunter' || p.actions <= 0) return;
+            if (p.pos === 'rua' || board[p.pos].items <= 0) return alert("No items here.");
+            if (p.hand.length >= 4) return alert("Hand full (Max 4).");
+            
+            board[p.pos].items--; p.actions--;
+            if(hunterDeck.length > 0) { 
+                p.hand.push(hunterDeck.pop()); 
+                logAction(`Found valuable supplies at [${getPosName(p.pos)}].`); 
+            } 
+            else alert("Deck empty!");
+            updateUI();
+        }
+
+        function actionFeed() {
+            if (p.type !== 'monster' || p.actions <= 0) return;
+            if (p.pos === 'rua' || board[p.pos].type !== 'ninho') return alert("No Nest here.");
+            
+            board[p.pos].type = 'comum';
+            p.hp += 3; p.ninhos++; p.actions--;
+            logAction(`Devoured biomass at [${getPosName(p.pos)}].`, true);
+            
+            if (p.ninhos >= 3 && !p.alpha) {
+                p.alpha = true; p.hp += 8;
+                logSystem("!!! THE MONSTER REACHED ALPHA STAGE AND MUTATED (+8 HP) !!!");
+            }
+            updateUI();
+        }
+
+        function checkWinState() {
+            let m = players[3];
+            let aliveHunters = players.filter(h => h.type === 'hunter' && h.hp > 0).length;
+            if(m.hp <= 0) document.body.innerHTML = "<h1 style='color:green; text-align:center; margin-top:20%'>HUNTERS' VICTORY!</h1>";
+            else if (aliveHunters === 0) document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:20%'>MONSTER'S VICTORY!</h1>";
+        }
+
+        function updateUI() {
+            document.getElementById('current-player-name').innerText = isSetupPhase ? "SETUP: The Monster" : `Turn: ${p.name}`;
+            document.getElementById('current-player-name').className = p.type === 'hunter' ? 'turn-hunter' : 'turn-monster';
+            document.getElementById('stat-hp').innerText = `HP: ${p.hp}`;
+            document.getElementById('stat-ammo').innerText = p.type === 'hunter' ? `Ammo: ${p.ammo}` : `Evolution: ${p.ninhos}/3`;
+            document.getElementById('stat-actions').innerText = `Actions: ${isSetupPhase ? 0 : p.actions}`;
+            
+            let passBtn = document.getElementById('btn-pass');
+            let atkBtn = document.getElementById('btn-attack');
+
+            if (isSetupPhase) {
+                passBtn.disabled = true; passBtn.innerText = "CHOOSE YOUR DEN (GREEN)"; passBtn.style.background = "#882020";
+                atkBtn.disabled = true;
+                document.getElementById('btn-search').disabled = true;
+                document.getElementById('btn-feed').disabled = true;
+            } else if (targetingMode) {
+                passBtn.disabled = true;
+                atkBtn.disabled = false; atkBtn.innerText = "CANCEL TARGETING"; atkBtn.style.background = "#aaaa00"; atkBtn.style.color = "#000"; atkBtn.onclick = cancelAttack;
+                document.getElementById('btn-search').disabled = true;
+                document.getElementById('btn-feed').disabled = true;
+            } else {
+                passBtn.disabled = false; passBtn.innerText = "End Turn"; passBtn.style.background = "";
+                atkBtn.disabled = p.actions <= 0 || (p.type === 'hunter' && p.ammo <= 0);
+                atkBtn.innerText = "Attack (1 Action)"; atkBtn.style.background = ""; atkBtn.style.color = "#fff"; atkBtn.onclick = actionAttack;
+                document.getElementById('btn-search').style.display = p.type === 'hunter' ? 'inline-block' : 'none';
+                document.getElementById('btn-search').disabled = p.actions <= 0 || p.pos === 'rua' || board[p.pos].items <= 0;
+                document.getElementById('btn-feed').style.display = p.type === 'monster' ? 'inline-block' : 'none';
+                document.getElementById('btn-feed').disabled = p.actions <= 0 || p.pos === 'rua' || board[p.pos].type !== 'ninho';
+            }
+
+            const handDiv = document.getElementById('hand-container');
+            handDiv.innerHTML = '';
+            if(p.hand.length === 0) handDiv.innerHTML = '<span style="color:#666; margin:auto; font-size:12px;">No cards in hand.</span>';
+            p.hand.forEach((cardId, index) => {
+                let c = cardsDB[cardId];
+                let btn = document.createElement('div');
+                btn.className = 'play-card';
+                btn.style.opacity = targetingMode ? '0.3' : '1'; 
+                btn.onclick = () => playCard(index);
+                btn.innerHTML = `<div class="card-title">${c.name}</div><div class="card-desc">${c.desc}</div><div style="margin-top:5px; color:#55aaff;">[${c.type}]</div>`;
+                handDiv.appendChild(btn);
+            });
+
+            for(let i=0; i<25; i++) {
+                let cell = document.getElementById(`cell-${i}`);
+                cell.className = `card ${board[i].type}`;
+                
+                if (isSetupPhase && p.type === 'monster') {
+                    if (isValidSpawn(i)) cell.classList.add('highlight-move');
+                } else if (targetingMode) {
+                    if (getDistance(p.pos, i) <= currentAttack.range) cell.classList.add('highlight-attack');
+                } else if (!isSetupPhase && p.actions > 0) {
+                    if (isValidMove(p.pos, i, p.type)) cell.classList.add('highlight-move');
+                }
+                
+                document.getElementById(`trap-${i}`).style.display = (board[i].trap && p.type === 'hunter') ? 'block' : 'none';
+                let itemEl = document.getElementById(`item-${i}`);
+                if(board[i].items > 0) { itemEl.innerText = `📦 ${board[i].items}`; itemEl.style.display = 'block'; } 
+                else { itemEl.style.display = 'none'; }
+                let badge = document.getElementById(`badge-${i}`);
+                if(board[i].blood > 0) { badge.innerText = board[i].blood; badge.classList.add('visible'); } 
+                else badge.classList.remove('visible');
+                
+                document.getElementById(`tokens-${i}`).innerText = '';
+            }
+            
+            let ruaCell = document.getElementById('rua-acesso');
+            ruaCell.className = `card rua`;
+            if (targetingMode && getDistance(p.pos, 'rua') <= currentAttack.range) ruaCell.classList.add('highlight-attack');
+            else if (!isSetupPhase && p.actions > 0 && isValidMove(p.pos, 'rua', p.type)) ruaCell.classList.add('highlight-move');
+
+            document.getElementById('tokens-rua').innerText = '';
+            let ruaBadge = document.getElementById('badge-rua');
+            if(board['rua'].blood > 0) { ruaBadge.innerText = board['rua'].blood; ruaBadge.classList.add('visible'); } 
+            else ruaBadge.classList.remove('visible');
+
+            players.forEach(player => {
+                if(player.hp > 0 && player.pos !== -1) {
+                    let isVisible = player.alpha || player.revealedTurns > 0;
+                    if (player.type === 'monster' && p.type === 'hunter' && !isVisible) return; 
+                    document.getElementById(`tokens-${player.pos}`).innerText += player.icon;
+                }
+            });
+            
+            updateLogVisibility();
+        }
+
+        function logAction(msg, isSecret = false) {
+            let l = document.getElementById('log');
+            let colorClass = p.type === 'hunter' ? 'log-hunter' : 'log-monster';
+            let secretClass = isSecret ? 'secret-log' : '';
+            let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            l.innerHTML = `<div class="${colorClass} ${secretClass}">[${hora}] ${p.name}: ${msg}</div>` + l.innerHTML;
+        }
+        
+        function logSystem(msg, isSecret = false) {
+            let l = document.getElementById('log');
+            let secretClass = isSecret ? 'secret-log' : '';
+            let hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            l.innerHTML = `<div class="log-system ${secretClass}">[${hora}] ${msg}</div>` + l.innerHTML;
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
